@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/chooserFragment">
+
+    <fragment
+        android:id="@+id/chooserFragment"
+        android:name="com.example.tomatodisease.ui.ChooserFragment"
+        android:label="fragment_chooser"
+        tools:layout="@layout/fragment_chooser" >
+        <action
+            android:id="@+id/toImageDetection"
+            app:destination="@id/imageDetectionFragment" />
+        <action
+            android:id="@+id/toLiveDetection"
+            app:destination="@id/liveDetectionFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/imageDetectionFragment"
+        android:name="com.example.tomatodisease.ui.ImageDetectionFragment"
+        android:label="fragment_image_detection"
+        tools:layout="@layout/fragment_image_detection" />
+    <fragment
+        android:id="@+id/liveDetectionFragment"
+        android:name="com.example.tomatodisease.ui.LiveDetectionFragment"
+        android:label="fragment_live_detection"
+        tools:layout="@layout/fragment_live_detection" >
+        <action
+            android:id="@+id/openSettings"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.tomatodisease.ui.SettingsFragment"
+        android:label="SettingsFragment" />
+</navigation>
