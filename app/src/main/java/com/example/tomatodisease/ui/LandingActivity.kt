@@ -19,10 +19,6 @@ class LandingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        binding.apply {
-            root.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-        }
-
         MainScope().launch {
             delay(SplashWaitTime)
 
