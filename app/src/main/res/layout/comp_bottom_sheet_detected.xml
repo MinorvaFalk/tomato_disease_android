@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/imgPreview"
+        android:layout_width="@dimen/detected_object_preview"
+        android:layout_height="@dimen/detected_object_preview"
+        tools:srcCompat="@tools:sample/avatars" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvDetectedClass"
+            style="@style/LiveDetection.Detected.ClassName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Detected Class" />
+
+        <TextView
+            android:id="@+id/tvConfidenceLevel"
+            style="@style/LiveDetection.Detected.Confidence"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Confidence level" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnShowMore"
+        style="@style/LiveDetection.Detected.ButtonShowMore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show More Info" />
+</LinearLayout>

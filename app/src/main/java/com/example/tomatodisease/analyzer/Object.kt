@@ -11,15 +11,31 @@ import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
 
 typealias DetectorListener = (obj: Task<MutableList<DetectedObject>>, img: ImageProxy) -> Unit
 
+object DetectorOptions {
+    val SINGLE_IMAGE_MULTIPLE_OBJECT = ObjectDetectorOptions.Builder()
+        .setDetectorMode(ObjectDetectorOptions.SINGLE_IMAGE_MODE)
+        .enableClassification()
+        .enableMultipleObjects()
+        .build()
+
+    val STREAM_MULTIPLE_OBJECT = ObjectDetectorOptions.Builder()
+        .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
+        .enableClassification()
+        .enableMultipleObjects()
+        .build()
+
+    val STREAM_SINGLE_OBJECT = ObjectDetectorOptions.Builder()
+        .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
+        .enableClassification()
+        .build()
+}
+
 @SuppressLint("UnsafeOptInUsageError")
 class ObjectDetectorAnalyzer(
     private val listener: DetectorListener
 ) : ImageAnalysis.Analyzer {
     // Object Detector configuration
-    private val options = ObjectDetectorOptions.Builder()
-        .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
-        .build()
-    private val objectDetector = ObjectDetection.getClient(options)
+    private val objectDetector = ObjectDetection.getClient(DetectorOptions.STREAM_SINGLE_OBJECT)
 
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image

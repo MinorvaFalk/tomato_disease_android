@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="detected_object_preview">50dp</dimen>
+    <dimen name="detected_object_picture">200dp</dimen>
+    <dimen name="detected_objects_preview">70dp</dimen>
+    <dimen name="small_button_size">30dp</dimen>
+</resources>

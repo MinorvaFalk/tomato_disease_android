@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        style="@style/StillImageDetection.Bottom.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select image source" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_weight="1"
+            android:text="@string/camera"
+            android:textSize="12sp"
+            app:icon="@drawable/ic_baseline_photo_camera_24" />
+
+        <Button
+            android:id="@+id/btnGallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/gallery"
+            android:textSize="12sp"
+            app:icon="@drawable/ic_baseline_image_24" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnDetailedInfo"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:drawableEnd="@drawable/ic_baseline_navigate_next_24"
+        android:text="Show Detailed Info"
+        android:visibility="gone" />
+</LinearLayout>

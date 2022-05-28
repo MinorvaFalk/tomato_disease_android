@@ -1,14 +1,9 @@
 package com.example.tomatodisease.ui
 
-import android.graphics.Rect
-import android.graphics.RectF
-import android.hardware.display.DisplayManager
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
-import android.view.Surface
 import android.view.View
 import android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
 import android.view.ViewGroup
@@ -18,19 +13,25 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.tomatodisease.analyzer.ObjectDetectorAnalyzer
 import com.example.tomatodisease.databinding.FragmentLiveDetectionBinding
+import com.example.tomatodisease.domain.model.DetectedObjectItem
 import com.example.tomatodisease.utils.REQUEST_CODE_PERMISSIONS
 import com.example.tomatodisease.utils.REQUIRED_PERMISSIONS
+import com.example.tomatodisease.utils.UiEvent
 import com.example.tomatodisease.utils.allPermissionsGranted
 import com.google.mlkit.vision.objects.DetectedObject
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
-import java.util.concurrent.ExecutorService
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 @AndroidEntryPoint
@@ -40,10 +41,7 @@ class LiveDetectionFragment : Fragment() {
 
     private val viewModel by activityViewModels<MainViewModel>()
 
-    private lateinit var cameraExecutor: ExecutorService
-
-    private var previewHeight: Int = 0
-    private var previewWidth: Int = 0
+    private val cameraExecutor by lazy { Executors.newSingleThreadExecutor() }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,14 +61,52 @@ class LiveDetectionFragment : Fragment() {
                 requireActivity(), REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
-        cameraExecutor = Executors.newSingleThreadExecutor()
 
         binding.apply {
             btnSettings.setOnClickListener {
                 findNavController().navigate(LiveDetectionFragmentDirections.openSettings())
             }
 
+            includeDetected.btnShowMore.setOnClickListener {
+                findNavController().navigate(LiveDetectionFragmentDirections.toDetectedObjects())
+            }
+
             root.systemUiVisibility = SYSTEM_UI_FLAG_FULLSCREEN
+        }
+
+        subscribeObserver()
+    }
+
+    private fun subscribeObserver() {
+        collectLatestLifecycleFlow(viewModel.detectionState) {
+
+        }
+
+        collectLatestLifecycleFlow(viewModel.detectedObjectItem) {
+            if (it.isNotEmpty()) {
+                binding.includeDetected.imgPreview.setImageBitmap(it[0].imageBitmap)
+            }
+        }
+
+        collectLatestLifecycleFlow(viewModel.uiEvent) { event ->
+            binding.apply {
+                when (event) {
+                    is UiEvent.Error -> {
+                        tvInfo.isVisible = true
+                        includeDetected.root.isVisible = false
+                    }
+
+                    is UiEvent.ShowDetails -> {
+                        tvInfo.isVisible = false
+                        includeDetected.root.isVisible = true
+                    }
+
+                    is UiEvent.DetectionFailed -> {
+                        tvInfo.isVisible = true
+                        includeDetected.root.isVisible = false
+                    }
+                }
+            }
         }
     }
 
@@ -79,61 +115,14 @@ class LiveDetectionFragment : Fragment() {
 
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-            val preview = Preview.Builder().apply {
-                setupResolution(this)
-            }.build().also {
-                binding.apply {
-                    it.setSurfaceProvider(viewFinder.surfaceProvider)
-                    var width = viewFinder.width * viewFinder.scaleX
-                    var height = viewFinder.height * viewFinder.scaleY
-                    val rotation = viewFinder.display.rotation
-                    if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
-                        val temp = width
-                        width = height
-                        height = temp
-                    }
 
-                    previewHeight = height.toInt()
-                    previewWidth = width.toInt()
-                }
-            }
-
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .also {
-                    it.setAnalyzer(cameraExecutor, ObjectDetectorAnalyzer { task, img ->
-                        task.addOnSuccessListener { detectedObj ->
-                            debugPrint(detectedObj)
-                            val rotation = img.imageInfo.rotationDegrees
-
-                            val reverseDimens = rotation == 90 || rotation == 270
-                            val width = if (reverseDimens) img.height else img.width
-                            val height = if (reverseDimens) img.width else img.height
-
-                            val bounds = detectedObj.map { obj ->
-                                obj.boundingBox.transform(width, height)
-                            }
-
-                            draw(bounds)
-                        }
-                        task.addOnFailureListener { e ->
-                            Log.e(TAG, e.message ?: e.toString())
-                        }
-                        task.addOnCompleteListener {
-                            img.close()
-                        }
-                    })
-                }
             try {
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(
                     viewLifecycleOwner,
-                    cameraSelector,
-                    preview,
-                    imageAnalyzer
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    buildPreviewView(),
+                    buildImageAnalysis()
                 )
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -143,12 +132,77 @@ class LiveDetectionFragment : Fragment() {
 
     }
 
-    private fun draw(bounds: List<RectF>) {
-        binding.cameraOverlay.post {
-            binding.cameraOverlay.drawObjBounds(bounds)
+    private fun getDetectedObjectData(objects: List<DetectedObject>) {
+        val detectedObjectItem = mutableListOf<DetectedObjectItem>()
+
+        objects.map {
+            var className: String? = null
+            var confidence: Float? = null
+
+
+            for (label in it.labels) {
+                className = label.text
+                confidence = label.confidence
+            }
+
+            detectedObjectItem.add(
+                DetectedObjectItem(
+                    it.trackingId,
+                    className,
+                    confidence,
+                    binding.cameraOverlay.getDetectedImage(it.boundingBox, binding.viewFinder)
+                )
+            )
         }
+
+        viewModel.submitDetectedObjectItem(detectedObjectItem)
     }
 
+    // Preview view
+    private fun buildPreviewView(): Preview {
+        val preview = Preview.Builder().apply {
+//            setupResolution(this)
+        }.build().also {
+            binding.apply {
+                it.setSurfaceProvider(viewFinder.surfaceProvider)
+            }
+        }
+
+        return preview
+    }
+
+    // Image analysis using object detection
+    private fun buildImageAnalysis(): ImageAnalysis {
+        val imageAnalyzer = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                it.setAnalyzer(cameraExecutor, ObjectDetectorAnalyzer { task, img ->
+
+                    task.addOnSuccessListener { detectedObjects ->
+                        viewModel.updateState(MainViewModel.DetectionState(detectedObjects = detectedObjects))
+
+                        debugPrint(detectedObjects)
+
+                        binding.cameraOverlay.apply {
+                            post {
+                                drawDetectionResults(detectedObjects, img)
+                                getDetectedObjectData(detectedObjects)
+                            }
+                        }
+                    }
+                    task.addOnFailureListener { e ->
+                        Log.e(TAG, e.message ?: e.toString())
+                    }
+                    task.addOnCompleteListener {
+                        img.close()
+                    }
+                })
+            }
+        return imageAnalyzer
+    }
+
+    // Setup camera preview resolution
     private fun setupResolution(preview: Preview.Builder){
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.targetResolution.collectLatest {
@@ -163,18 +217,6 @@ class LiveDetectionFragment : Fragment() {
                 }
             }
         }
-    }
-
-    private fun Rect.transform(width: Int, height: Int): RectF {
-        val scaleX = previewWidth / width.toFloat()
-        val scaleY = previewHeight / height.toFloat()
-
-        // Scale all coordinates to match preview
-        val scaledLeft = scaleX * left
-        val scaledTop = scaleY * top
-        val scaledRight = scaleX * right
-        val scaledBottom = scaleY * bottom
-        return RectF(scaledLeft, scaledTop, scaledRight, scaledBottom)
     }
 
     private fun debugPrint(detectedObjects: List<DetectedObject>) {
@@ -193,12 +235,17 @@ class LiveDetectionFragment : Fragment() {
 
     companion object {
         private const val TAG = "LiveDetectionFragment"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun <T> Fragment.collectLatestLifecycleFlow(
+        flow: Flow<T>,
+        collect: suspend (T) -> Unit,
+    ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                flow.collectLatest(collect)
+            }
+        }
     }
 
     override fun onDestroy() {

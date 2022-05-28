@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
-import com.example.tomatodisease.ui.LiveDetectionFragment
 
 val REQUIRED_PERMISSIONS =
     mutableListOf (

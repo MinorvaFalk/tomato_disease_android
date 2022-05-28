@@ -21,7 +21,11 @@
         android:id="@+id/imageDetectionFragment"
         android:name="com.example.tomatodisease.ui.ImageDetectionFragment"
         android:label="fragment_image_detection"
-        tools:layout="@layout/fragment_image_detection" />
+        tools:layout="@layout/fragment_image_detection" >
+        <action
+            android:id="@+id/toDetectedObjects"
+            app:destination="@id/detectedObjectsFragment" />
+    </fragment>
     <fragment
         android:id="@+id/liveDetectionFragment"
         android:name="com.example.tomatodisease.ui.LiveDetectionFragment"
@@ -30,9 +34,30 @@
         <action
             android:id="@+id/openSettings"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/toDetectedObjects"
+            app:destination="@id/detectedObjectsFragment" />
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.tomatodisease.ui.SettingsFragment"
         android:label="SettingsFragment" />
+    <fragment
+        android:id="@+id/detectedObjectsFragment"
+        android:name="com.example.tomatodisease.ui.DetectedObjectsFragment"
+        android:label="fragment_detected_objects"
+        tools:layout="@layout/fragment_detected_objects" >
+        <action
+            android:id="@+id/toResult"
+            app:destination="@id/resultDetectedObjectFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/resultDetectedObjectFragment"
+        android:name="com.example.tomatodisease.ui.ResultDetectedObjectFragment"
+        android:label="fragment_result_detected_object"
+        tools:layout="@layout/fragment_result_detected_object" >
+        <argument
+            android:name="detected"
+            app:argType="com.example.tomatodisease.domain.model.DetectedObjectItem" />
+    </fragment>
 </navigation>

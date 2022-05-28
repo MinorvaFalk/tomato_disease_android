@@ -19,4 +19,8 @@
     <string name="settings">Settings</string>
 
     <string name="camera_target_reso_pref">Camera target resolution</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+    <string name="no_object_detected">No Object Detected</string>
+    <string name="loading">Loading</string>
 </resources>

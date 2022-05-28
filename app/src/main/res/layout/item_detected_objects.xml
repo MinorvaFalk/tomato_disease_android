@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="16dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="@dimen/detected_objects_preview"
+            android:layout_height="@dimen/detected_objects_preview"
+            app:cardCornerRadius="4dp">
+
+            <ImageView
+                android:id="@+id/imgDetectedObject"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="fitCenter"
+                tools:srcCompat="@tools:sample/avatars" />
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/layoutId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    style="@style/Result.DetectedObjects.Card.Info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ID: " />
+
+                <TextView
+                    android:id="@+id/tvId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="1" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Result.DetectedObjects.Card.Info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Class: " />
+
+                <TextView
+                    android:id="@+id/tvClassName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Furniture" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutConfidence"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    style="@style/Result.DetectedObjects.Card.Info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Confidence: " />
+
+                <TextView
+                    android:id="@+id/tvConfidence"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="97%" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btnDetails"
+            android:layout_width="@dimen/small_button_size"
+            android:layout_height="@dimen/small_button_size"
+            android:background="@drawable/bg_round"
+            app:srcCompat="@drawable/ic_baseline_navigate_next_24"
+            app:tint="@color/white" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
