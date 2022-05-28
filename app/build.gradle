@@ -18,6 +18,11 @@ plugins {
 android {
     compileSdk 32
 
+    aaptOptions {
+        noCompress "tflite"
+        // or noCompress "lite"
+    }
+
     defaultConfig {
         applicationId "com.example.tomatodisease"
         minSdk 21
@@ -97,6 +102,7 @@ dependencies {
 
     // MlKit
     implementation 'com.google.mlkit:object-detection:17.0.0'
+    implementation 'com.google.mlkit:object-detection-custom:17.0.0'
 
     // Datastore
     implementation "androidx.datastore:datastore-preferences:1.0.0"

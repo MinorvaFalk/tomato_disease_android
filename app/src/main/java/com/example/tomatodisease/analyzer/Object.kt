@@ -4,9 +4,11 @@ import android.annotation.SuppressLint
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.android.gms.tasks.Task
+import com.google.mlkit.common.model.LocalModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.DetectedObject
 import com.google.mlkit.vision.objects.ObjectDetection
+import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
 
 typealias DetectorListener = (obj: Task<MutableList<DetectedObject>>, img: ImageProxy) -> Unit
@@ -35,6 +37,19 @@ class ObjectDetectorAnalyzer(
     private val listener: DetectorListener
 ) : ImageAnalysis.Analyzer {
     // Object Detector configuration
+    private val customModel = LocalModel.Builder()
+        .setAssetFilePath("lite-model_aiy_vision_classifier_plants_V1_3.tflite")
+        .build()
+
+    private val customObjectDetectorOptions = CustomObjectDetectorOptions.Builder(customModel)
+        .setDetectorMode(CustomObjectDetectorOptions.STREAM_MODE)
+        .enableClassification()
+        .setClassificationConfidenceThreshold(0.5f)
+        .setMaxPerObjectLabelCount(3)
+        .build()
+
+    private val customObjectDetector = ObjectDetection.getClient(customObjectDetectorOptions)
+
     private val objectDetector = ObjectDetection.getClient(DetectorOptions.STREAM_SINGLE_OBJECT)
 
     override fun analyze(imageProxy: ImageProxy) {

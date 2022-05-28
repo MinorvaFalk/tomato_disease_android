@@ -39,6 +39,11 @@ class LiveDetectedObjectsView(
             )
     }
 
+    private fun createDotPaint() = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        style = Paint.Style.FILL
+    }
+
     private val numColors = COLORS.size
     private val boxPaints = Array(numColors) { Paint() }
 
@@ -53,19 +58,10 @@ class LiveDetectedObjectsView(
         }
     }
 
-    fun getDetectedImage(rect: Rect, previewView: PreviewView): Bitmap? {
-        var bitmap: Bitmap? = null
+    fun clearView() {
+        transformedResults = emptyList()
 
-        Log.d(TAG, transformedResults.toString())
-
-        transformedResults.map {
-            if (it.originalBoxRectF == rect) {
-                bitmap = cropBitMapBasedResult(it, previewView)
-                return@map
-            }
-        }
-
-        return bitmap
+        postInvalidate()
     }
 
     fun drawDetectionResults(results: List<DetectedObject>, img: ImageProxy) {
@@ -111,22 +107,11 @@ class LiveDetectedObjectsView(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+//        canvas.drawCircle((width/2).toFloat(), (height/2).toFloat(), 40f, createDotPaint())
 
         // Draw rectangle for each bounding box
         transformedResults.forEach { result ->
             canvas.drawRect(result.actualBoxRectF, result.paint)
         }
-    }
-
-    private fun cropBitMapBasedResult(result: TransformedDetectionResult, previewView: PreviewView): Bitmap? {
-        val converted = result.actualBoxRectF.toRect()
-
-        return Bitmap.createBitmap(
-            previewView.bitmap!!,
-            converted.left,
-            converted.top,
-            converted.width(),
-            converted.height()
-        )
     }
 }

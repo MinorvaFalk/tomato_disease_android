@@ -1,5 +1,7 @@
 package com.example.tomatodisease.ui
 
+import android.graphics.Bitmap
+import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tomatodisease.domain.model.DetectedObjectItem
@@ -46,6 +48,16 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun detectObject(detectedObjects: List<DetectedObject>, imageProxy: ImageProxy, croppedBitmap: Bitmap) {
+        viewModelScope.launch {
+            _detectionState.value = DetectionState(isLoading = true)
+
+            // Pass image to end point to check if it is tomato leaf
+
+            _detectionState.value = DetectionState(isLoading = false, detectedObjects = detectedObjects, imageProxy = imageProxy, croppedBitmap = croppedBitmap)
+        }
+    }
+
     // List of detected objects to pass for another fragment
     private val _detectedObjectItem = MutableStateFlow(listOf<DetectedObjectItem>())
     val detectedObjectItem = _detectedObjectItem.asStateFlow()
@@ -57,6 +69,8 @@ class MainViewModel @Inject constructor(
     data class DetectionState(
         val isLoading: Boolean = false,
         val detectedObjects: List<DetectedObject>? = null,
+        val imageProxy: ImageProxy? = null,
+        val croppedBitmap: Bitmap? = null,
         val error: Exception? = null
     )
 }
