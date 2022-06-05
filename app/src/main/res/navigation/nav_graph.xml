@@ -16,6 +16,9 @@
         <action
             android:id="@+id/toLiveDetection"
             app:destination="@id/liveDetectionFragment" />
+        <action
+            android:id="@+id/toImageDetectionBasic"
+            app:destination="@id/imageDetectionBasicFragment" />
     </fragment>
     <fragment
         android:id="@+id/imageDetectionFragment"
@@ -44,7 +47,7 @@
         android:label="SettingsFragment" />
     <fragment
         android:id="@+id/detectedObjectsFragment"
-        android:name="com.example.tomatodisease.ui.DetectedObjectsFragment"
+        android:name="com.example.tomatodisease.ui.DetectedFragment"
         android:label="fragment_detected_objects"
         tools:layout="@layout/fragment_detected_objects" >
         <action
@@ -53,11 +56,20 @@
     </fragment>
     <fragment
         android:id="@+id/resultDetectedObjectFragment"
-        android:name="com.example.tomatodisease.ui.ResultDetectedObjectFragment"
+        android:name="com.example.tomatodisease.ui.ResultFragment"
         android:label="fragment_result_detected_object"
         tools:layout="@layout/fragment_result_detected_object" >
         <argument
             android:name="detected"
             app:argType="com.example.tomatodisease.domain.model.DetectedObjectItem" />
+    </fragment>
+    <fragment
+        android:id="@+id/imageDetectionBasicFragment"
+        android:name="com.example.tomatodisease.ui.ImageDetectionBasicFragment"
+        android:label="fragment_image_detection_basic"
+        tools:layout="@layout/fragment_image_detection_basic" >
+        <action
+            android:id="@+id/toResult"
+            app:destination="@id/resultDetectedObjectFragment" />
     </fragment>
 </navigation>

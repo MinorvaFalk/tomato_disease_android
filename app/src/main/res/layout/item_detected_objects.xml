@@ -42,9 +42,7 @@
                 android:id="@+id/layoutId"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:visibility="gone"
-                tools:visibility="visible">
+                android:orientation="horizontal">
 
                 <TextView
                     style="@style/Result.DetectedObjects.Card.Info"
@@ -81,9 +79,7 @@
                 android:id="@+id/layoutConfidence"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:visibility="gone"
-                tools:visibility="visible">
+                android:orientation="horizontal">
 
                 <TextView
                     style="@style/Result.DetectedObjects.Card.Info"

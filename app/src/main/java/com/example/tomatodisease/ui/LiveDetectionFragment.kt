@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.RectF
 import android.os.Bundle
 import android.util.Log
-import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -24,33 +23,42 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.example.tomatodisease.R
 import com.example.tomatodisease.analyzer.ObjectDetectorAnalyzer
 import com.example.tomatodisease.databinding.FragmentLiveDetectionBinding
 import com.example.tomatodisease.domain.model.DetectedObjectItem
-import com.example.tomatodisease.utils.REQUEST_CODE_PERMISSIONS
-import com.example.tomatodisease.utils.REQUIRED_PERMISSIONS
-import com.example.tomatodisease.utils.UiEvent
-import com.example.tomatodisease.utils.allPermissionsGranted
+import com.example.tomatodisease.ui.viewmodels.MainViewModel
+import com.example.tomatodisease.utils.*
 import com.google.mlkit.vision.objects.DetectedObject
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.lang.Float.max
 import java.util.concurrent.Executors
 import kotlin.math.abs
-import kotlin.math.max
 
 @AndroidEntryPoint
 class LiveDetectionFragment : Fragment() {
     private var _binding: FragmentLiveDetectionBinding? = null
     private val binding get() = _binding!!
 
-    private var trackingId: Int? = -1
+    private var detected: List<DetectedObject>? = null
+    private var imgProxy: ImageProxy? = null
+    private var croppedImage: Bitmap? = null
 
     private val viewModel by activityViewModels<MainViewModel>()
 
     private val cameraExecutor by lazy { Executors.newSingleThreadExecutor() }
+
+
+    private val timer = (0..Int.MAX_VALUE)
+        .asSequence()
+        .asFlow()
+        .onEach { delay(1000) }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,8 +78,10 @@ class LiveDetectionFragment : Fragment() {
                 requireActivity(), REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
-
         binding.apply {
+            cameraOverlay.clearView()
+            includeDetected.root.isVisible = false
+            tvInfo.isVisible = true
             btnSettings.setOnClickListener {
                 findNavController().navigate(LiveDetectionFragmentDirections.openSettings())
             }
@@ -88,68 +98,70 @@ class LiveDetectionFragment : Fragment() {
 
     // Collect state changes from viewModel
     private fun subscribeObserver() {
-        collectLatestLifecycleFlow(viewModel.detectionState) {
-            showLoading(it.isLoading)
+        // Connect to socket
+        viewModel.connectToSocket()
 
-            it.detectedObjects?.let { detectedObjects ->
-                getDetectedObjectData(detectedObjects, it.croppedBitmap!!)
+        collectLatestLifecycleFlow(viewModel.socketPredictionResult) { response ->
+            if (response.className.isNotBlank() && response.error.isNullOrBlank()) {
+                Log.i(TAG, "Prediction: ${response.className}, Confidence: ${response.confidence}")
+                // Draw Bounding box
+                detected?.let { obj ->
+                    imgProxy?.let { img ->
+                        Log.i(TAG, "Prediction: ${response.className}, Confidence: ${response.confidence}")
 
-                binding.cameraOverlay.apply {
-                    post {
-                        it.imageProxy?.let { img ->
-                            drawDetectionResults(detectedObjects, img)
+                        binding.apply {
+                            includeDetected.apply {
+                                root.isVisible = true
+                                tvInfo.isVisible = false
+                                tvDetectedClass.text = response.className
+                                tvConfidenceLevel.text = response.confidence
+                                imgPreview.setImageBitmap(croppedImage)
+                            }
+
+                            if (response.className != "Unknown") {
+                                includeDetected.btnShowMore.isVisible = true
+                                viewModel.submitDetectedObjectItem(
+                                    listOf(
+                                        DetectedObjectItem(
+                                            0,
+                                            response.className,
+                                            response.confidence,
+                                            croppedImage
+                                        )
+                                    )
+                                )
+                            }else {
+                                includeDetected.btnShowMore.isVisible = false
+                            }
+
+                            cameraOverlay.apply {
+                                post {
+                                    drawDetectionResults(obj, img)
+                                }
+                            }
                         }
                     }
                 }
-            }
+            }else {
+                if (response.error != null) {
+                    requireContext().showToast(response.error)
+                }
 
-            it.imageProxy?.close()
-        }
-
-        // Handle detected objects
-        // TODO: Deprecate
-//        collectLatestLifecycleFlow(viewModel.detectedObjectItem) {
-//            if (it.isNotEmpty()) {
-//
-//                binding.includeDetected.apply {
-//                    root.isVisible = true
-//                    imgPreview.setImageBitmap(it[0].imageBitmap)
-//                }
-//            }
-//        }
-
-        // Handle UI Event
-        collectLatestLifecycleFlow(viewModel.uiEvent) { event ->
-            binding.apply {
-                when (event) {
-                    is UiEvent.Error -> {
-                        tvInfo.isVisible = true
-                        includeDetected.root.isVisible = false
-                    }
-
-                    is UiEvent.ShowDetails -> {
-                        tvInfo.isVisible = false
-                        includeDetected.root.isVisible = true
-                    }
-
-                    is UiEvent.DetectionFailed -> {
-                        tvInfo.isVisible = true
-                        includeDetected.root.isVisible = false
-                    }
+                binding.apply {
+                    includeDetected.root.isVisible = false
+                    tvInfo.isVisible = true
                 }
             }
         }
-    }
 
-    private fun showLoading(isLoading: Boolean){
-        binding.apply {
-            tvInfo.isVisible = true
-            includeDetected.root.isVisible = false
+        collectLatestLifecycleFlow(viewModel.uiEvent) { event ->
+            when(event) {
+                is UiEvent.Error -> {
+                    requireContext().showToast(event.msg)
+                }
+                else -> {
 
-            if (!isLoading) {
-                tvInfo.setText(R.string.no_object_detected)
-            }else {
-                tvInfo.setText(R.string.loading)
+                }
             }
         }
     }
@@ -191,8 +203,6 @@ class LiveDetectionFragment : Fragment() {
     }
 
     // Image analysis using object detection
-    //
-    // Detection will require user to be steady with device camera.
     private fun buildImageAnalysis(): ImageAnalysis {
         val imageAnalyzer = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -203,23 +213,30 @@ class LiveDetectionFragment : Fragment() {
                     task.addOnSuccessListener { detectedObjects ->
                         debugPrint(detectedObjects)
                         if (detectedObjects.isNullOrEmpty()) {
-                            binding.cameraOverlay.clearView()
-                            showLoading(false)
+                            binding.apply {
+                                includeDetected.root.isVisible = false
+                                cameraOverlay.clearView()
+                                tvInfo.isVisible = true
+                            }
+
 
                             return@addOnSuccessListener
                         }
 
+                        detected = detectedObjects
+                        imgProxy = imageProxy
                         for (detectedObject in detectedObjects) {
-                            Log.i(TAG, "current tracking ID: $trackingId")
-                            Log.i(TAG, "detected tracking ID: ${detectedObject.trackingId}")
+                            croppedImage = getCroppedImage(detectedObject, imageProxy)
 
-                            trackingId = detectedObject.trackingId
-                            val croppedBitmap = getCroppedImage(detectedObject, imageProxy)
-
-                            Log.i(TAG, "Cropped bitmap: "+ croppedBitmap.toString())
-
-                            croppedBitmap?.let {
-                                viewModel.detectObject(detectedObjects, imageProxy, croppedBitmap)
+                            croppedImage?.toBase64()?.let { str ->
+                                MainScope().launch {
+                                    timer.collectLatest { time ->
+                                        if (time % 5000 == 0) {
+                                            Log.i(TAG, "send image")
+                                            viewModel.sendImage(str)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -238,6 +255,10 @@ class LiveDetectionFragment : Fragment() {
                 })
             }
         return imageAnalyzer
+    }
+
+    private fun cropImage(detectedObject: DetectedObject): Bitmap? {
+        return binding.viewFinder.bitmap?.cropBitmap(detectedObject.boundingBox)
     }
 
     private fun getCroppedImage(detectedObject: DetectedObject, imageProxy: ImageProxy): Bitmap? {
@@ -275,48 +296,6 @@ class LiveDetectionFragment : Fragment() {
         }
     }
 
-    private fun getDetectedObjectData(objects: List<DetectedObject>, croppedImage: Bitmap) {
-        val detectedObjectItem = mutableListOf<DetectedObjectItem>()
-
-        objects.map {
-            var className: String? = null
-            var confidence: Float? = null
-
-
-            for (label in it.labels) {
-                className = label.text
-                confidence = label.confidence
-            }
-
-            detectedObjectItem.add(
-                DetectedObjectItem(
-                    it.trackingId,
-                    className,
-                    confidence,
-                    croppedImage
-                )
-            )
-        }
-
-        binding.apply {
-            tvInfo.isVisible = false
-            includeDetected.apply {
-                root.isVisible = true
-                imgPreview.setImageBitmap(croppedImage)
-                detectedObjectItem.map {
-
-                    it.confidence?.let { conf ->
-                        tvConfidenceLevel.text = conf.toString()
-                    }
-
-                    tvDetectedClass.text = if (it.className.isNullOrEmpty()) "Not Found" else it.className
-                }
-            }
-        }
-
-        viewModel.submitDetectedObjectItem(detectedObjectItem)
-    }
-
     private fun debugPrint(detectedObjects: List<DetectedObject>) {
         detectedObjects.forEachIndexed { index, detectedObject ->
             val box = detectedObject.boundingBox
@@ -346,8 +325,13 @@ class LiveDetectionFragment : Fragment() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onStop() {
+        super.onStop()
+        viewModel.closeSocket()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
         cameraExecutor.shutdown()
     }
 

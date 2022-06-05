@@ -6,6 +6,9 @@ import android.graphics.drawable.BitmapDrawable
 import android.util.AttributeSet
 import android.util.Log
 import androidx.appcompat.widget.AppCompatImageView
+import com.example.tomatodisease.utils.CanvasPreset.COLORS
+import com.example.tomatodisease.utils.CanvasPreset.NUM_COLORS
+import com.example.tomatodisease.utils.CanvasPreset.STROKE_WIDTH
 import com.google.mlkit.vision.objects.DetectedObject
 import kotlin.math.abs
 import kotlin.math.max
@@ -17,21 +20,6 @@ class DetectedObjectsView(
 
     companion object {
         private const val TAG = "DetectedObjectsView"
-        private const val NUM_COLORS = 10
-        private const val STROKE_WIDTH = 4.0f
-        private val COLORS =
-            arrayOf(
-                intArrayOf(Color.BLACK, Color.WHITE),
-                intArrayOf(Color.WHITE, Color.MAGENTA),
-                intArrayOf(Color.BLACK, Color.LTGRAY),
-                intArrayOf(Color.WHITE, Color.RED),
-                intArrayOf(Color.WHITE, Color.BLUE),
-                intArrayOf(Color.WHITE, Color.DKGRAY),
-                intArrayOf(Color.BLACK, Color.CYAN),
-                intArrayOf(Color.BLACK, Color.YELLOW),
-                intArrayOf(Color.WHITE, Color.BLACK),
-                intArrayOf(Color.BLACK, Color.GREEN)
-            )
     }
 
     private val numColors = COLORS.size
@@ -48,19 +36,29 @@ class DetectedObjectsView(
         }
     }
 
-    fun getDetectedImage(rect: Rect): Bitmap? {
-        var bitmap: Bitmap? = null
+    fun drawBoundingBox(boundingBox: List<Rect>) {
+        (drawable as? BitmapDrawable)?.bitmap?.let { srcImage ->
+            val scaleFactor =
+                max(srcImage.width / width.toFloat(), srcImage.height / height.toFloat())
+            val diffWidth = abs(width - srcImage.width / scaleFactor) / 2
+            val diffHeight = abs(height - srcImage.height / scaleFactor) / 2
 
-        Log.d(TAG, transformedResults.toString())
-
-        transformedResults.map {
-            if (it.originalBoxRectF == rect) {
-                bitmap = cropBitMapBasedResult(it)
-                return@map
+            transformedResults = boundingBox.map { result ->
+                val actualRectBoundingBox = RectF(
+                    (result.left / scaleFactor) + diffWidth,
+                    (result.top / scaleFactor) + diffHeight,
+                    (result.right / scaleFactor) + diffWidth,
+                    (result.bottom / scaleFactor) + diffHeight
+                )
+                TransformedDetectionResult(actualRectBoundingBox, result, boxPaints[0])
             }
-        }
+            Log.d(
+                TAG,
+                "srcImage: ${srcImage.width}/${srcImage.height} - imageView: ${width}/${height} => scaleFactor: $scaleFactor"
+            )
 
-        return bitmap
+            invalidate()
+        }
     }
 
     fun drawDetectionResults(results: List<DetectedObject>) {
@@ -106,6 +104,20 @@ class DetectedObjectsView(
         transformedResults.forEach { result ->
             canvas.drawRect(result.actualBoxRectF, result.paint)
         }
+    }
+
+    fun cropImage(boundingBox: Rect): Bitmap? {
+        (drawable as? BitmapDrawable)?.bitmap?.let {
+            return Bitmap.createBitmap(
+                it,
+                boundingBox.left,
+                boundingBox.top,
+                boundingBox.width(),
+                boundingBox.height()
+            )
+        }
+
+        return null
     }
 
     private fun cropBitMapBasedResult(result: TransformedDetectionResult): Bitmap? {

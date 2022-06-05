@@ -12,7 +12,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -24,7 +23,11 @@ import androidx.navigation.findNavController
 import com.example.tomatodisease.analyzer.DetectorOptions
 import com.example.tomatodisease.databinding.FragmentImageDetectionBinding
 import com.example.tomatodisease.domain.model.DetectedObjectItem
+import com.example.tomatodisease.domain.model.Response
+import com.example.tomatodisease.ui.viewmodels.MainViewModel
 import com.example.tomatodisease.utils.*
+import com.example.tomatodisease.utils.CameraHelper.REQUEST_CHOOSE_IMAGE
+import com.example.tomatodisease.utils.CameraHelper.REQUEST_IMAGE_CAPTURE
 import com.google.android.material.snackbar.Snackbar
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.DetectedObject
@@ -62,8 +65,14 @@ class ImageDetectionFragment : Fragment() {
 
         binding.apply {
             includeBottom.apply {
-                btnCamera.setOnClickListener { startCameraIntentForResult() }
-                btnGallery.setOnClickListener { startChooseImageIntentForResult() }
+                btnCamera.setOnClickListener {
+                    previewCanvas.drawDetectionResults(emptyList())
+                    startCameraIntentForResult()
+                }
+                btnGallery.setOnClickListener {
+                    previewCanvas.drawDetectionResults(emptyList())
+                    startChooseImageIntentForResult()
+                }
 
                 btnDetailedInfo.apply {
                     setOnClickListener {
@@ -76,14 +85,80 @@ class ImageDetectionFragment : Fragment() {
         subscribeObserver()
     }
 
+    private fun showLoading(isLoading: Boolean) {
+        binding.apply {
+            progressBar.isVisible = isLoading
+        }
+    }
+
     // Observer for UI Update
     private fun subscribeObserver() {
-        collectLatestLifecycleFlow(viewModel.detectionState) {
-            binding.apply {
-                progressBar.isVisible = it.isLoading
+        // Collect result from API call
+        collectLatestLifecycleFlow(viewModel.multiplePredictions) { res ->
+            when (res) {
+                is Response.Success -> {
+                    Log.i(TAG, "Detected : ${res.data.result}")
+
+                    if (res.data.result.isEmpty()) {
+                        return@collectLatestLifecycleFlow
+                    }
+
+                    val objects = viewModel.objects
+                    val detectedObject = mutableListOf<DetectedObjectItem>()
+                    val newObject = mutableListOf<DetectedObject>()
+
+                    // Mapping detected object to another fragment
+                    res.data.result.map { result ->
+                        // Create list of detectedObject to draw boundingBox
+                        if (result.className != "Unknown") {
+                            val new = objects[result.index].detectedObject
+                            newObject.add(new)
+
+                            detectedObject.add(DetectedObjectItem(
+                                result.index,
+                                result.className,
+                                result.confidence,
+                                objects[result.index].bitmap
+                            ))
+                        }
+
+                    }
+                    viewModel.submitDetectedObjectItem(detectedObject)
+
+                    // Draw bounding box
+                    binding.previewCanvas.apply {
+                        post {
+                            drawDetectionResults(newObject)
+                            showLoading(false)
+                        }
+                    }
+
+                }
+
+                is Response.Loading -> {
+                    showLoading(true)
+                }
+
+                is Response.ApiError -> {
+                    showLoading(false)
+                    Log.e(TAG, res.message)
+                }
+
+                is Response.Error -> {
+                    showLoading(false)
+                    Log.e(TAG, res.exception.message ?: res.toString())
+
+                }
+
+                else -> {
+                    showLoading(false)
+                }
             }
+
+
         }
 
+        // Collect UiEvent
         collectLatestLifecycleFlow(viewModel.uiEvent) { event ->
             binding.apply {
                 when (event) {
@@ -105,74 +180,61 @@ class ImageDetectionFragment : Fragment() {
                             .setAnchorView(includeBottom.root)
                             .show()
                     }
+                    else -> {}
                 }
             }
         }
     }
 
-    // Detect image using object detector
-    private fun detectImage() {
-        // Loading State
-        viewModel.updateState(MainViewModel.DetectionState(isLoading = true))
-
+    private fun detectImage(){
         try {
             val imageBitmap = requireActivity().getBitmapFromUri(imageUri!!)
             val image = InputImage.fromBitmap(imageBitmap!!, 0)
 
+            binding.previewCanvas.apply {
+                setImageBitmap(imageBitmap)
+            }
+
             val objectDetectedObject = ObjectDetection.getClient(DetectorOptions.SINGLE_IMAGE_MULTIPLE_OBJECT)
             objectDetectedObject.process(image)
                 .addOnSuccessListener { detectedObjects ->
-                    // Object found state
-                    viewModel.updateState(MainViewModel.DetectionState(detectedObjects = detectedObjects))
+
+                    // Return if no object detected
+                    if (detectedObjects.isEmpty()) {
+                        viewModel.detectionFailed()
+
+                        return@addOnSuccessListener
+                    }
 
                     debugPrint(detectedObjects)
 
-                    binding.previewCanvas.apply {
-                        setImageBitmap(imageBitmap)
-                        post {
-                            drawDetectionResults(detectedObjects)
-                            getDetectedObjectData(detectedObjects)
+                    val indexedImage = mutableListOf<MainViewModel.Objects>()
+                    detectedObjects.mapIndexed { index, detectedObject ->
+
+                        // Get cropped image then send to API
+                        binding.previewCanvas.cropImage(detectedObject.boundingBox)?.let { bitmap ->
+                            indexedImage.add(
+                                MainViewModel.Objects(
+                                index,
+                                detectedObject,
+                                bitmap
+                            ))
                         }
                     }
+
+                    viewModel.submitImages(indexedImage)
                 }
                 .addOnFailureListener { e ->
-                    // Error found state
-                    viewModel.updateState(MainViewModel.DetectionState(error = e))
-
                     Log.e(TAG, e.message ?: e.toString())
-                }
 
+                }
         } catch (e: Exception) {
             Log.e(TAG, e.message ?: e.toString())
             imageUri = null
         }
     }
 
-    // Pass detected object info into ViewModel
-    private fun getDetectedObjectData(objects: List<DetectedObject>) {
-        val detectedObjectItem = mutableListOf<DetectedObjectItem>()
-
-        objects.map {
-            var className: String? = null
-            var confidence: Float? = null
-
-
-            for (label in it.labels) {
-                className = label.text
-                confidence = label.confidence
-            }
-
-            detectedObjectItem.add(DetectedObjectItem(
-                it.trackingId,
-                className,
-                confidence,
-                binding.previewCanvas.getDetectedImage(it.boundingBox)
-            ))
-        }
-
-        viewModel.submitDetectedObjectItem(detectedObjectItem)
-    }
-
+    // Capture image from camera
     private fun startCameraIntentForResult() {
         // Clear image uri and preview
         imageUri = null
@@ -195,6 +257,7 @@ class ImageDetectionFragment : Fragment() {
         }
     }
 
+    // Choose image from storage intent
     private fun startChooseImageIntentForResult() {
         val intent = Intent()
         intent.type = "image/*"
@@ -229,9 +292,6 @@ class ImageDetectionFragment : Fragment() {
             detectImage()
         } else {
             super.onActivityResult(requestCode, resultCode, data)
-
-            Toast.makeText(requireContext(), imageUri.toString(), Toast.LENGTH_SHORT).show()
-
         }
     }
 
@@ -245,7 +305,7 @@ class ImageDetectionFragment : Fragment() {
         collect: suspend (T) -> Unit,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 flow.collectLatest(collect)
             }
         }
@@ -253,8 +313,6 @@ class ImageDetectionFragment : Fragment() {
 
     companion object {
         private const val TAG = "ImageDetectionFragment"
-        private const val REQUEST_IMAGE_CAPTURE = 1001
-        private const val REQUEST_CHOOSE_IMAGE = 1002
     }
 
 }

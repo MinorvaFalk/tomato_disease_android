@@ -8,6 +8,7 @@ import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
 import com.example.tomatodisease.R
 import com.example.tomatodisease.domain.repository.DataStoreRepository
+import com.example.tomatodisease.ui.viewmodels.SettingsViewModel
 import com.example.tomatodisease.utils.getCameraCharacteristics
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

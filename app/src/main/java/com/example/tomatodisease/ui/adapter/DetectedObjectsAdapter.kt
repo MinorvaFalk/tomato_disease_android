@@ -36,18 +36,9 @@ class DetectedObjectsAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position)?.let { item ->
             holder.binding.apply {
-                item.id?.let {
-                    tvId.text = it.toString()
-                    layoutId.isVisible = true
-                }
-
-                item.confidence?.let {
-                    tvConfidence.text = it.toString()
-                    layoutConfidence.isVisible = true
-                }
-
-                tvClassName.text = if (item.className.isNullOrEmpty()) "Not Found" else item.className
-
+                tvId.text = item.id.toString()
+                tvConfidence.text = item.confidence
+                tvClassName.text = item.className
                 imgDetectedObject.setImageBitmap(item.imageBitmap)
             }
         }

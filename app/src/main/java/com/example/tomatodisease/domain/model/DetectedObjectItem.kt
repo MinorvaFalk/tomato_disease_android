@@ -6,8 +6,8 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class DetectedObjectItem(
-    val id: Int?,
-    val className: String?,
-    val confidence: Float?,
+    val id: Int,
+    val className: String,
+    val confidence: String,
     val imageBitmap: Bitmap?
 ): Parcelable
