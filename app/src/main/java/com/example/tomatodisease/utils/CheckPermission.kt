@@ -18,7 +18,7 @@ val REQUIRED_PERMISSIONS =
 
 const val REQUEST_CODE_PERMISSIONS = 10
 
-fun allPermissionsGranted(context: Context) = REQUIRED_PERMISSIONS.all {
-    ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+fun Context.allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+    ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
 }
 

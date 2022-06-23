@@ -6,4 +6,7 @@ sealed class UiEvent {
     object DetectionFailed : UiEvent()
 
     object ConnectionClosed: UiEvent()
+    object NotConnected: UiEvent()
+
+    object SocketConnected: UiEvent()
 }

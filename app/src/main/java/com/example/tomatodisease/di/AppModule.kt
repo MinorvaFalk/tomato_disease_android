@@ -60,6 +60,11 @@ object AppModule {
         api,
         dispatcher
     )
+
+    /*
+    Repository for REST with Ktor Client
+     */
+
 //    fun provideMainRepository(
 //        service: MainService,
 //        @DispatchersModule.IoDispatcher

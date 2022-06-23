@@ -5,8 +5,11 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.Base64
+import android.util.Log
 import java.io.ByteArrayOutputStream
+import kotlin.math.roundToInt
 
+private const val TAG = "Utils.CanvasHelper"
 
 fun getActualBoundingBox(
     boundingBox: Rect,
@@ -30,15 +33,15 @@ fun Bitmap.cropBitmap(boundingBox: Rect): Bitmap = Bitmap.createBitmap(
 
 fun Bitmap.toBase64() : String? {
     val outputStream = ByteArrayOutputStream()
-    this.compress(Bitmap.CompressFormat.JPEG, 65, outputStream)
+    val resized = Bitmap.createScaledBitmap(
+        this,
+        ((this.width * 0.5).roundToInt()),
+        ((this.height * 0.5).roundToInt()),
+        true
+    )
+    resized.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
 
     return Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT)
-
-//    val out = ByteArrayOutputStream()
-//    this.compress(Bitmap.CompressFormat.JPEG, 100, out)
-//    val byte = out.toByteArray()
-//
-//    return Base64.encodeToString(byte, Base64.DEFAULT)
 }
 
 object CanvasPreset {

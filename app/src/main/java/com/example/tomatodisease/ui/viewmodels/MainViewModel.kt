@@ -7,6 +7,7 @@ import com.example.tomatodisease.domain.model.*
 import com.example.tomatodisease.domain.repository.DataStoreRepository
 import com.example.tomatodisease.domain.repository.MainRepository
 import com.example.tomatodisease.domain.service.SocketService
+import com.example.tomatodisease.utils.PreferencesKey
 import com.example.tomatodisease.utils.UiEvent
 import com.example.tomatodisease.utils.toBase64
 import com.google.mlkit.vision.objects.DetectedObject
@@ -19,8 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val dataStore: DataStoreRepository,
-    val repository: MainRepository,
-    val socketService: SocketService
+    private val repository: MainRepository,
+    private val socketService: SocketService
 ): ViewModel() {
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
@@ -38,6 +39,8 @@ class MainViewModel @Inject constructor(
     val detectedObjects = _detectedObjects.asStateFlow()
 
     var objects: MutableList<Objects> = mutableListOf()
+
+    val targetResolution = dataStore.getString(PreferencesKey.targetResolution)
 
     // Submit detected object
     fun submitDetectedObjectItem(data: List<DetectedObjectItem>) {
@@ -73,8 +76,15 @@ class MainViewModel @Inject constructor(
                 // Check if result is success and not empty
                 if (res is Response.Success) {
                     if (res.data.result.isNotEmpty()) {
-                        _uiEvent.emit(UiEvent.ShowDetails)
+                        val check = res.data.result.filter { it.className != "Unknown" }
+                        if (check.isEmpty()) {
+                            _uiEvent.emit(UiEvent.DetectionFailed)
+                        }else {
+                            _uiEvent.emit(UiEvent.ShowDetails)
+                        }
                     }
+                }else if (res is Response.Error) {
+                    _uiEvent.emit(UiEvent.NotConnected)
                 }
             }
         }
@@ -86,10 +96,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    // Live Detection
     fun connectToSocket() {
         viewModelScope.launch {
             when(val connection = socketService.initSocket()) {
                 is Response.Success -> {
+                    _uiEvent.emit(UiEvent.SocketConnected)
+
                     socketService.observeSocket()
                         .collectLatest {
                             _socketPredictionResult.value = _socketPredictionResult.value.copy(
@@ -104,7 +117,10 @@ class MainViewModel @Inject constructor(
                 }
                 else -> {
                     if (connection is Response.Error) {
-                        _uiEvent.emit(UiEvent.Error(connection.exception.message ?: connection.exception.toString()))
+                        _uiEvent.emit(UiEvent.Error(
+                            connection.exception.message
+                                ?: connection.exception.toString()
+                        ))
                     }
                 }
             }
@@ -119,6 +135,14 @@ class MainViewModel @Inject constructor(
 
                     if (res is Response.Success && res.data.className != "Unknown") {
                         _uiEvent.emit(UiEvent.ShowDetails)
+                    }
+
+                    if (res is Response.Success && res.data.className == "Unknown") {
+                        _uiEvent.emit(UiEvent.DetectionFailed)
+                    }
+
+                    if (res is Response.Error) {
+                        _uiEvent.emit(UiEvent.NotConnected)
                     }
                 }
         }

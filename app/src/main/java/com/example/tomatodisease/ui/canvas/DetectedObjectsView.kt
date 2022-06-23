@@ -61,6 +61,12 @@ class DetectedObjectsView(
         }
     }
 
+    fun clear() {
+        transformedResults = emptyList()
+
+        postInvalidate()
+    }
+
     fun drawDetectionResults(results: List<DetectedObject>) {
         (drawable as? BitmapDrawable)?.bitmap?.let { srcImage ->
             // Get scale size based width/height

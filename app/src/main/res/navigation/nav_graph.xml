@@ -12,7 +12,7 @@
         tools:layout="@layout/fragment_chooser" >
         <action
             android:id="@+id/toImageDetection"
-            app:destination="@id/imageDetectionFragment" />
+            app:destination="@id/multipleObjDetectionFragment" />
         <action
             android:id="@+id/toLiveDetection"
             app:destination="@id/liveDetectionFragment" />
@@ -21,19 +21,19 @@
             app:destination="@id/imageDetectionBasicFragment" />
     </fragment>
     <fragment
-        android:id="@+id/imageDetectionFragment"
-        android:name="com.example.tomatodisease.ui.ImageDetectionFragment"
+        android:id="@+id/multipleObjDetectionFragment"
+        android:name="com.example.tomatodisease.ui.MultipleObjDetection"
         android:label="fragment_image_detection"
-        tools:layout="@layout/fragment_image_detection" >
+        tools:layout="@layout/fragment_multiple_obj_detection" >
         <action
             android:id="@+id/toDetectedObjects"
             app:destination="@id/detectedObjectsFragment" />
     </fragment>
     <fragment
         android:id="@+id/liveDetectionFragment"
-        android:name="com.example.tomatodisease.ui.LiveDetectionFragment"
+        android:name="com.example.tomatodisease.ui.RealTimeDetectionFragment"
         android:label="fragment_live_detection"
-        tools:layout="@layout/fragment_live_detection" >
+        tools:layout="@layout/fragment_real_time_detection" >
         <action
             android:id="@+id/openSettings"
             app:destination="@id/settingsFragment" />
@@ -62,12 +62,16 @@
         <argument
             android:name="detected"
             app:argType="com.example.tomatodisease.domain.model.DetectedObjectItem" />
+        <argument
+            android:name="showSaveImage"
+            app:argType="boolean"
+            android:defaultValue="true" />
     </fragment>
     <fragment
         android:id="@+id/imageDetectionBasicFragment"
-        android:name="com.example.tomatodisease.ui.ImageDetectionBasicFragment"
+        android:name="com.example.tomatodisease.ui.StillImageFragment"
         android:label="fragment_image_detection_basic"
-        tools:layout="@layout/fragment_image_detection_basic" >
+        tools:layout="@layout/fragment_still_image" >
         <action
             android:id="@+id/toResult"
             app:destination="@id/resultDetectedObjectFragment" />

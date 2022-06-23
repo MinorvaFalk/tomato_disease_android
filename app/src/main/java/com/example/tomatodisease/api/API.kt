@@ -12,7 +12,7 @@ interface API {
 
     companion object {
         //TODO: configure this value
-        const val BASE_URL = "5135-158-140-162-149.ap.ngrok.io"
+        const val BASE_URL = "3747-158-140-162-149.ap.ngrok.io"
     }
 
     sealed class Endpoints(val url: String) {

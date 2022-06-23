@@ -2,21 +2,37 @@ package com.example.tomatodisease.utils
 
 import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
+private const val TAG = "Utils.Helpers"
+
 fun Context.showToast(msg: String) {
     Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+}
+
+fun Context.showSnackbar(msg: String, view: View) {
+    Snackbar.make(this, view, msg, Snackbar.LENGTH_SHORT).show()
+}
+
+fun Context.showDialogNoInternet(): MaterialAlertDialogBuilder {
+    return MaterialAlertDialogBuilder(this)
+        .setTitle("Failed to connect to server")
+        .setMessage("Please try again later")
 }
 
 fun Activity.convertUriToBitmap(imgUri: Uri): Bitmap? {

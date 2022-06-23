@@ -36,7 +36,6 @@ class SocketServiceImpl @Inject constructor(
         return try {
             socket = socketClient.webSocketSession{
                 url(API.Endpoints.Socket.url)
-
             }
 
             if (socket?.isActive == true) {

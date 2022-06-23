@@ -20,7 +20,8 @@ class MainRepositoryRetrofit @Inject constructor(
         private const val TAG = "MainRepositoryRetrofit"
     }
 
-    override suspend fun uploadSingleImage(image: RequestImage): Flow<Response<ResponsePrediction>> =
+    override suspend fun uploadSingleImage(image: RequestImage)
+    : Flow<Response<ResponsePrediction>> =
         flow {
             try {
                 val response = api.uploadSingleImage(image)
@@ -42,7 +43,8 @@ class MainRepositoryRetrofit @Inject constructor(
             .onStart { emit(Response.Loading()) }
             .flowOn(dispatcher)
 
-    override suspend fun uploadMultipleImage(images: RequestMultipleImage): Flow<Response<ResponseMultiplePredictions>> =
+    override suspend fun uploadMultipleImage(images: RequestMultipleImage)
+    : Flow<Response<ResponseMultiplePredictions>> =
         flow {
             try {
                 val response = api.uploadMultipleImages(images)

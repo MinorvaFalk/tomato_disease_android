@@ -4,20 +4,23 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/drawable/bg_round.xml" value="0.2255" />
-        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/activity_landing.xml" value="0.33" />
+        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/activity_landing.xml" value="0.25" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/activity_main.xml" value="0.25" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/comp_bottom_image_detection.xml" value="0.3532608695652174" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/comp_bottom_sheet_detected.xml" value="0.5" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/comp_bottom_still_image_detection.xml" value="0.3532608695652174" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/custom_feature_card.xml" value="0.5" />
-        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_chooser.xml" value="0.33" />
+        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_chooser.xml" value="0.25" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_detected_info.xml" value="0.3532608695652174" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_detected_objects.xml" value="0.25" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_image_detection.xml" value="0.22" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_image_detection_basic.xml" value="0.2975630611372381" />
-        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_live_detection.xml" value="0.33" />
-        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_result_detected_object.xml" value="0.33" />
+        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_live_detection.xml" value="0.2470534904805077" />
+        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_multiple_obj_detection.xml" value="0.2975630611372381" />
+        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_real_time_detection.xml" value="0.2975630611372381" />
+        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_result_detected_object.xml" value="0.25" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_settings.xml" value="0.3625" />
+        <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_still_image.xml" value="0.2975630611372381" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/fragment_still_image_results.xml" value="0.3532608695652174" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/item_detected_objects.xml" value="0.2975630611372381" />
         <entry key="..\:/Projects/android/TomatoDisease/app/src/main/res/layout/item_still_image_detected_objects.xml" value="0.5" />

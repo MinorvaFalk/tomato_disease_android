@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -55,9 +56,13 @@ class ResultFragment : Fragment() {
                 saveMediaToStorage(args.detected.imageBitmap!!)
             }
 
+            btnSave.isVisible = args.showSaveImage
+
             webview.apply {
-                settings.javaScriptEnabled = true
-                loadUrl("https://www.google.com/search?q=${args.detected.className} Treatment")
+                if (!args.detected.className.contains("Healthy", ignoreCase = true)) {
+                    settings.javaScriptEnabled = true
+                    loadUrl("https://www.google.com/search?q=${args.detected.className} Treatment")
+                }
             }
         }
     }

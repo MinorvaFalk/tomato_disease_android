@@ -53,8 +53,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     }
 
-
-
     companion object {
         private const val TAG = "SettingsFragment"
         val cameraResolution = arrayOf(

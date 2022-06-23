@@ -40,7 +40,7 @@ object NetworkModule {
             }
             defaultRequest {
                 url {
-                    host = API.BASE_URL // TODO: configure this value
+                    host = API.BASE_URL
                     contentType(ContentType.Application.Json)
                 }
             }

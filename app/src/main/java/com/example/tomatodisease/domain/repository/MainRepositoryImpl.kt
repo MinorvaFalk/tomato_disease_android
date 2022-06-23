@@ -17,7 +17,7 @@ class MainRepositoryImpl @Inject constructor(
 ): MainRepository {
     override suspend fun uploadSingleImage(
         image: RequestImage
-    ): Flow<Response<ResponsePrediction>> = flow{
+    ): Flow<Response<ResponsePrediction>> = flow {
         try {
             val response = service.uploadSingleImage(image)
 

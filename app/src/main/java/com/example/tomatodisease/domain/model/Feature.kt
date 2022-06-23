@@ -11,7 +11,7 @@ data class Feature(
 )
 
 val features = listOf(
-    Feature(1,"Live Detection", "Detect plant disease realtime using camera", ChooserFragmentDirections.toLiveDetection()),
-    Feature(2,"Object Detection + Image Classification", "Detect plant disease with Object Detection and Image Classification", ChooserFragmentDirections.toImageDetection()),
-    Feature(3, "Image Detection", "Detect plant disease using image from library", ChooserFragmentDirections.toImageDetectionBasic())
+    Feature(1,"Real-Time Detection", "Detect plant disease realtime", ChooserFragmentDirections.toLiveDetection()),
+    Feature(2,"Multiple Object", "Detect multiple plant disease", ChooserFragmentDirections.toImageDetection()),
+    Feature(3, "Still Image", "Detect plant disease using image from library", ChooserFragmentDirections.toImageDetectionBasic())
 )
